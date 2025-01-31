@@ -64,4 +64,8 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22" // or
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
+    // Remove the other
+}

@@ -4,6 +4,7 @@ import 'dart:async'; // Import Timer
 import 'package:http/http.dart' as http; // For API calls
 import 'dart:convert'; // For JSON encoding
 import 'package:device_info_plus/device_info_plus.dart'; // For getting user's mobile number
+import 'package:shared_preferences/shared_preferences.dart'; // For local storage
 
 void main() {
   runApp(MyApp());
@@ -30,10 +31,12 @@ class _CallLogScreenState extends State<CallLogScreen> {
   String? _userMobileNumber; // Store the user's mobile number
 
   final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  late SharedPreferences _prefs; // For local storage
 
   @override
   void initState() {
     super.initState();
+    _initSharedPreferences(); // Initialize SharedPreferences
     _fetchUserMobileNumber(); // Fetch the user's mobile number
     _fetchCallLogs(); // Fetch call logs initially
     _startTimer(); // Start the timer for periodic refresh
@@ -43,6 +46,18 @@ class _CallLogScreenState extends State<CallLogScreen> {
   void dispose() {
     _timer?.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
+  }
+
+  // Initialize SharedPreferences
+  Future<void> _initSharedPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+    // Load already sent logs from SharedPreferences
+    _sentLogs = Set<String>.from(_prefs.getStringList('sentLogs') ?? []);
+  }
+
+  // Save sent logs to SharedPreferences
+  Future<void> _saveSentLogs() async {
+    await _prefs.setStringList('sentLogs', _sentLogs.toList());
   }
 
   Future<void> _fetchUserMobileNumber() async {
@@ -119,6 +134,7 @@ class _CallLogScreenState extends State<CallLogScreen> {
     // Send new logs to the server in batches (e.g., 5 logs at a time)
     if (newLogs.isNotEmpty) {
       await _sendLogsToApi(newLogs);
+      await _saveSentLogs(); // Save the updated sent logs to SharedPreferences
     }
   }
 
